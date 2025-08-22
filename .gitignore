@@ -1,0 +1,32 @@
+# OS junk
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment / secrets
+.env
+.env.*.local
+
+# Dependencies & build outputs (common for Node/React)
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+.tmp/
+
+# IDE / tooling
+.vscode/
+.idea/
+
+# ----- YOUR PROJECT-SPECIFIC EXCLUSIONS -----
+/backup/
+/temp_uploads/
+/test-output/
+node_modules/
