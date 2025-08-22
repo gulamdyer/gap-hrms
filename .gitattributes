@@ -1,0 +1,35 @@
+# Make text files consistent in the repo (LF in Git history)
+* text=auto eol=lf
+
+# Shell / scripts
+*.sh   text eol=lf
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Web/Node/React
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.css   text eol=lf
+*.scss  text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.env   text eol=lf
+*.sql   text eol=lf
+
+# Binary files (never auto-convert line endings)
+*.png  -text
+*.jpg  -text
+*.jpeg -text
+*.gif  -text
+*.svg  -text
+*.ico  -text
+*.pdf  -text
+*.zip  -text
+*.gz   -text
+*.7z   -text
