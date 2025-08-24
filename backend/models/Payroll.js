@@ -971,25 +971,35 @@ class Payroll {
         PERIOD_ID NUMBER NOT NULL,
         EMPLOYEE_ID NUMBER NOT NULL,
         RUN_ID NUMBER,
-        BASIC_SALARY NUMBER(15,2) NOT NULL,
-        GROSS_SALARY NUMBER(15,2) NOT NULL,
-        NET_SALARY NUMBER(15,2) NOT NULL,
-        TOTAL_EARNINGS NUMBER(15,2) DEFAULT 0,
-        TOTAL_DEDUCTIONS NUMBER(15,2) DEFAULT 0,
-        TOTAL_TAXES NUMBER(15,2) DEFAULT 0,
+        BASIC_SALARY NUMBER(15,2) DEFAULT 0,
+        HRA_SALARY NUMBER(15,2) DEFAULT 0,
+        CONVEYANCE_SALARY NUMBER(15,2) DEFAULT 0,
+        OTHER_SALARY NUMBER(15,2) DEFAULT 0,
+        TOTAL_SALARY NUMBER(15,2) DEFAULT 0,
+        NET_SALARY NUMBER(15,2) DEFAULT 0,
+        TOTAL_EARNING NUMBER(15,2) DEFAULT 0,
+        TOTAL_DEDUCTION NUMBER(15,2) DEFAULT 0,
         WORK_DAYS NUMBER(3) DEFAULT 0,
-        PRESENT_DAYS NUMBER(3) DEFAULT 0,
+        PAYABLE_DAYS NUMBER(3) DEFAULT 0,
         ABSENT_DAYS NUMBER(3) DEFAULT 0,
         LEAVE_DAYS NUMBER(3) DEFAULT 0,
         OVERTIME_HOURS NUMBER(5,2) DEFAULT 0,
-        OVERTIME_AMOUNT NUMBER(15,2) DEFAULT 0,
+        OVERTIME_EARNING NUMBER(15,2) DEFAULT 0,
         LATE_DAYS NUMBER(3) DEFAULT 0,
         LATE_DEDUCTION NUMBER(15,2) DEFAULT 0,
-        ADVANCE_AMOUNT NUMBER(15,2) DEFAULT 0,
+        ADVANCE_DEDUCTION NUMBER(15,2) DEFAULT 0,
         LOAN_DEDUCTION NUMBER(15,2) DEFAULT 0,
-        OTHER_DEDUCTIONS NUMBER(15,2) DEFAULT 0,
-        BONUS_AMOUNT NUMBER(15,2) DEFAULT 0,
-        ALLOWANCE_AMOUNT NUMBER(15,2) DEFAULT 0,
+        OTHER_DEDUCTION NUMBER(15,2) DEFAULT 0,
+        BONUS_EARNING NUMBER(15,2) DEFAULT 0,
+        BASIC_EARNING NUMBER(15,2) DEFAULT 0,
+        HRA_EARNING NUMBER(15,2) DEFAULT 0,
+        CONVEYANCE_EARNING NUMBER(15,2) DEFAULT 0,
+        OTHER_EARNING NUMBER(15,2) DEFAULT 0,
+        FP_BASIC_EARNING NUMBER(15,2) DEFAULT 0,
+        ESI_DEDUCTION NUMBER(15,2) DEFAULT 0,
+        PF_DEDUCTION NUMBER(15,2) DEFAULT 0,
+        TDS_DEDUCTION NUMBER(15,2) DEFAULT 0,
+        TAXES_DEDUCTION NUMBER(15,2) DEFAULT 0,
         REMARKS VARCHAR2(1000),
         STATUS VARCHAR2(20) DEFAULT 'DRAFT' CHECK (STATUS IN ('DRAFT', 'CALCULATED', 'APPROVED', 'PAID', 'CANCELLED')),
         APPROVED_BY NUMBER,
@@ -1600,17 +1610,21 @@ class Payroll {
   static async createPayrollDetail(payrollData) {
     const sql = `
       INSERT INTO HRMS_PAYROLL_DETAILS (
-        PAYROLL_ID, PERIOD_ID, EMPLOYEE_ID, RUN_ID, BASIC_SALARY, GROSS_SALARY, NET_SALARY,
-        TOTAL_EARNINGS, TOTAL_DEDUCTIONS, TOTAL_TAXES, WORK_DAYS, PRESENT_DAYS,
-        ABSENT_DAYS, LEAVE_DAYS, OVERTIME_HOURS, OVERTIME_AMOUNT, LATE_DAYS,
-        LATE_DEDUCTION, ADVANCE_AMOUNT, LOAN_DEDUCTION, OTHER_DEDUCTIONS,
-        BONUS_AMOUNT, ALLOWANCE_AMOUNT, STATUS, CREATED_BY
+        PAYROLL_ID, PERIOD_ID, EMPLOYEE_ID, RUN_ID, BASIC_SALARY, HRA_SALARY, CONVEYANCE_SALARY,
+        OTHER_SALARY, TOTAL_SALARY, NET_SALARY, TOTAL_EARNING, TOTAL_DEDUCTION, 
+        WORK_DAYS, PAYABLE_DAYS, ABSENT_DAYS, LEAVE_DAYS, OVERTIME_HOURS, OVERTIME_EARNING, 
+        LATE_DAYS, LATE_DEDUCTION, ADVANCE_DEDUCTION, LOAN_DEDUCTION, OTHER_DEDUCTION,
+        BONUS_EARNING, BASIC_EARNING, HRA_EARNING, CONVEYANCE_EARNING, OTHER_EARNING,
+        FP_BASIC_EARNING, ESI_DEDUCTION, PF_DEDUCTION, TDS_DEDUCTION, TAXES_DEDUCTION,
+        STATUS, CREATED_BY
       ) VALUES (
-        HRMS_PAYROLL_DETAILS_SEQ.NEXTVAL, :periodId, :employeeId, :runId, :basicSalary, :grossSalary, :netSalary,
-        :totalEarnings, :totalDeductions, :totalTaxes, :workDays, :presentDays,
-        :absentDays, :leaveDays, :overtimeHours, :overtimeAmount, :lateDays,
-        :lateDeduction, :advanceAmount, :loanDeduction, :otherDeductions,
-        :bonusAmount, :allowanceAmount, :status, :createdBy
+        HRMS_PAYROLL_DETAILS_SEQ.NEXTVAL, :periodId, :employeeId, :runId, :basicSalary, :hraSalary, :conveyanceSalary,
+        :otherSalary, :totalSalary, :netSalary, :totalEarning, :totalDeduction,
+        :workDays, :payableDays, :absentDays, :leaveDays, :overtimeHours, :overtimeEarning,
+        :lateDays, :lateDeduction, :advanceDeduction, :loanDeduction, :otherDeduction,
+        :bonusEarning, :basicEarning, :hraEarning, :conveyanceEarning, :otherEarning,
+        :fpBasicEarning, :esiDeduction, :pfDeduction, :tdsDeduction, :taxesDeduction,
+        :status, :createdBy
       ) RETURNING PAYROLL_ID INTO :payrollId
     `;
 
@@ -2233,13 +2247,13 @@ class Payroll {
     const sql = `
       SELECT 
         COUNT(*) as TOTAL_EMPLOYEES,
-        SUM(GROSS_SALARY) as TOTAL_GROSS_PAY,
+        SUM(TOTAL_SALARY) as TOTAL_GROSS_PAY,
         SUM(NET_SALARY) as TOTAL_NET_PAY,
-        SUM(TOTAL_DEDUCTIONS) as TOTAL_DEDUCTIONS,
-        SUM(TOTAL_TAXES) as TOTAL_TAXES,
-        SUM(OVERTIME_AMOUNT) as TOTAL_OVERTIME,
-        SUM(BONUS_AMOUNT) as TOTAL_BONUS,
-        SUM(ADVANCE_AMOUNT) as TOTAL_ADVANCES,
+        SUM(TOTAL_DEDUCTION) as TOTAL_DEDUCTIONS,
+        SUM(TAXES_DEDUCTION) as TOTAL_TAXES,
+        SUM(OVERTIME_EARNING) as TOTAL_OVERTIME,
+        SUM(BONUS_EARNING) as TOTAL_BONUS,
+        SUM(ADVANCE_DEDUCTION) as TOTAL_ADVANCES,
         SUM(LOAN_DEDUCTION) as TOTAL_LOAN_DEDUCTIONS
       FROM HRMS_PAYROLL_DETAILS
       WHERE PERIOD_ID = :periodId
@@ -2427,90 +2441,78 @@ class Payroll {
 
   // Generate detailed report
   static async generateDetailedReport(periodId) {
+    console.log('🔍 Generating detailed report for period:', periodId);
+    
     const sql = `
       SELECT 
         pd.PAYROLL_ID,
         pd.PERIOD_ID,
         pd.EMPLOYEE_ID,
         pd.RUN_ID,
-        pd.BASIC_SALARY,
-        pd.GROSS_SALARY,
-        pd.NET_SALARY,
-        pd.TOTAL_EARNINGS,
-        pd.TOTAL_DEDUCTIONS,
-        pd.TOTAL_TAXES,
-        pd.WORK_DAYS,
-        pd.PRESENT_DAYS,
-        pd.ABSENT_DAYS,
-        pd.LEAVE_DAYS,
-        pd.OVERTIME_HOURS,
-        pd.OVERTIME_AMOUNT,
-        pd.LATE_DAYS,
-        pd.LATE_DEDUCTION,
-        pd.ADVANCE_AMOUNT,
-        pd.LOAN_DEDUCTION,
-        pd.OTHER_DEDUCTIONS,
-        pd.BONUS_AMOUNT,
-        pd.ALLOWANCE_AMOUNT,
+        NVL(pd.BASIC_SALARY, 0) as BASIC_SALARY,
+        NVL(pd.HRA_SALARY, 0) as HRA_SALARY,
+        NVL(pd.CONVEYANCE_SALARY, 0) as CONVEYANCE_SALARY,
+        NVL(pd.OTHER_SALARY, 0) as OTHER_SALARY,
+        NVL(pd.TOTAL_SALARY, 0) as TOTAL_SALARY,
+        NVL(pd.NET_SALARY, 0) as NET_SALARY,
+        NVL(pd.TOTAL_EARNING, 0) as TOTAL_EARNING,
+        NVL(pd.TOTAL_DEDUCTION, 0) as TOTAL_DEDUCTION,
+        NVL(pd.WORK_DAYS, 0) as WORK_DAYS,
+        NVL(pd.PAYABLE_DAYS, 0) as PAYABLE_DAYS,
+        NVL(pd.ABSENT_DAYS, 0) as ABSENT_DAYS,
+        NVL(pd.LEAVE_DAYS, 0) as LEAVE_DAYS,
+        NVL(pd.OVERTIME_HOURS, 0) as OVERTIME_HOURS,
+        NVL(pd.OVERTIME_EARNING, 0) as OVERTIME_EARNING,
+        NVL(pd.LATE_DAYS, 0) as LATE_DAYS,
+        NVL(pd.LATE_DEDUCTION, 0) as LATE_DEDUCTION,
+        NVL(pd.ADVANCE_DEDUCTION, 0) as ADVANCE_DEDUCTION,
+        NVL(pd.LOAN_DEDUCTION, 0) as LOAN_DEDUCTION,
+        NVL(pd.OTHER_DEDUCTION, 0) as OTHER_DEDUCTION,
+        NVL(pd.BONUS_EARNING, 0) as BONUS_EARNING,
         pd.REMARKS,
         pd.STATUS,
         pd.CREATED_AT,
         pd.CREATED_BY,
-        e.EMPLOYEE_CODE,
-        e.FIRST_NAME as EMPLOYEE_FIRST_NAME,
-        e.LAST_NAME as EMPLOYEE_LAST_NAME,
-        e.DESIGNATION,
-        e.DEPARTMENT,
+        NVL(e.EMPLOYEE_CODE, '') as EMPLOYEE_CODE,
+        NVL(e.LEGAL_NAME, '') as EMPLOYEE_FIRST_NAME,
+        NVL(e.LEGAL_NAME, '') as EMPLOYEE_LAST_NAME,
+        NVL(e.DESIGNATION, '') as DESIGNATION,
+        NVL(e.DEPARTMENT, '') as DEPARTMENT,
         e.DATE_OF_JOINING,
         e.IFSC_CODE,
         e.ACCOUNT_NUMBER,
-        u.FIRST_NAME as CREATED_BY_FIRST_NAME,
-        u.LAST_NAME as CREATED_BY_LAST_NAME,
-        NVL(ea.BASIC_AMOUNT, 0) AS BASIC_AMOUNT,
-        NVL(ea.HRA_AMOUNT, 0) AS HRA_AMOUNT,
-        NVL(ea.CONVEYANCE_AMOUNT, 0) AS CONVEYANCE_AMOUNT,
-        NVL(ea.OTHER_ALLOWANCES, 0) AS OTHER_ALLOWANCES,
-        NVL(dd.DED_ESI, 0) AS DED_ESI,
-        NVL(dd.DED_PF, 0) AS DED_PF,
-        NVL(dd.DED_TAX, 0) AS DED_TAX,
-        NVL(dd.DED_ADVANCE, 0) AS DED_ADVANCE,
-        NVL(dd.DED_OTHER, 0) AS DED_OTHER,
-        pd.TOTAL_DEDUCTIONS AS TOTAL_DEDUCTION_AMOUNT
+        -- Salary components (monthly allocation)
+        NVL(pd.BASIC_SALARY, 0) AS BASIC_AMOUNT,
+        NVL(pd.HRA_SALARY, 0) AS HRA_AMOUNT,
+        NVL(pd.CONVEYANCE_SALARY, 0) AS CONVEYANCE_AMOUNT,
+        NVL(pd.OTHER_SALARY, 0) AS OTHER_ALLOWANCES,
+        -- Actual earnings
+        NVL(pd.BASIC_EARNING, 0) as BASIC_EARNING,
+        NVL(pd.HRA_EARNING, 0) as HRA_EARNING,
+        NVL(pd.CONVEYANCE_EARNING, 0) as CONVEYANCE_EARNING,
+        NVL(pd.OTHER_EARNING, 0) as OTHER_EARNING,
+        NVL(pd.FP_BASIC_EARNING, 0) as FP_BASIC_EARNING,
+        -- Deductions
+        NVL(pd.ESI_DEDUCTION, 0) AS DED_ESI,
+        NVL(pd.PF_DEDUCTION, 0) AS DED_PF,
+        NVL(pd.TDS_DEDUCTION, 0) AS DED_TAX,
+        NVL(pd.ADVANCE_DEDUCTION, 0) AS DED_ADVANCE,
+        NVL((pd.OTHER_DEDUCTION + pd.LATE_DEDUCTION + pd.LOAN_DEDUCTION), 0) AS DED_OTHER,
+        NVL(pd.TOTAL_DEDUCTION, 0) AS TOTAL_DEDUCTION_AMOUNT
       FROM HRMS_PAYROLL_DETAILS pd
       LEFT JOIN HRMS_EMPLOYEES e ON pd.EMPLOYEE_ID = e.EMPLOYEE_ID
-      LEFT JOIN HRMS_USERS u ON pd.CREATED_BY = u.USER_ID
-      LEFT JOIN (
-        SELECT 
-          PAYROLL_ID,
-          SUM(CASE WHEN EARNING_TYPE = 'BASIC' THEN AMOUNT ELSE 0 END) AS BASIC_AMOUNT,
-          SUM(CASE WHEN EARNING_TYPE = 'HRA' THEN AMOUNT ELSE 0 END) AS HRA_AMOUNT,
-          SUM(CASE WHEN EARNING_TYPE = 'TA' THEN AMOUNT ELSE 0 END) AS CONVEYANCE_AMOUNT,
-          SUM(CASE 
-                WHEN EARNING_TYPE NOT IN ('BASIC','HRA','TA') 
-                 AND (DESCRIPTION IS NULL OR DESCRIPTION NOT IN (
-                      'ESI Employer','Gratuity Accrual','EDLI Employer','EPF Admin Charges','EPF Employer','EPS Employer'
-                 )) 
-                THEN AMOUNT ELSE 0 END) AS OTHER_ALLOWANCES
-        FROM HRMS_PAYROLL_EARNINGS
-        GROUP BY PAYROLL_ID
-      ) ea ON ea.PAYROLL_ID = pd.PAYROLL_ID
-      LEFT JOIN (
-        SELECT 
-          PAYROLL_ID,
-          SUM(CASE WHEN DEDUCTION_TYPE = 'ESI' THEN AMOUNT ELSE 0 END) AS DED_ESI,
-          SUM(CASE WHEN DEDUCTION_TYPE = 'PF' THEN AMOUNT ELSE 0 END) AS DED_PF,
-          SUM(CASE WHEN DEDUCTION_TYPE = 'TAX' THEN AMOUNT ELSE 0 END) AS DED_TAX,
-          SUM(CASE WHEN DEDUCTION_TYPE = 'ADVANCE' THEN AMOUNT ELSE 0 END) AS DED_ADVANCE,
-          SUM(CASE WHEN DEDUCTION_TYPE IN ('OTHER','LATE','LOAN') THEN AMOUNT ELSE 0 END) AS DED_OTHER
-        FROM HRMS_PAYROLL_DEDUCTIONS
-        GROUP BY PAYROLL_ID
-      ) dd ON dd.PAYROLL_ID = pd.PAYROLL_ID
       WHERE pd.PERIOD_ID = :periodId
       ORDER BY e.DEPARTMENT, e.FIRST_NAME, e.LAST_NAME
     `;
 
-    const result = await executeQuery(sql, { periodId });
-    return result.rows;
+    try {
+      const result = await executeQuery(sql, { periodId });
+      console.log('✅ Detailed report query executed successfully. Found', result.rows.length, 'records');
+      return result.rows;
+    } catch (error) {
+      console.error('❌ Error in generateDetailedReport:', error.message);
+      throw error;
+    }
   }
 
   // Generate department report
@@ -2575,27 +2577,24 @@ class Payroll {
         e.EMPLOYEE_CODE,
         e.DEPARTMENT,
         e.DESIGNATION,
-        e.FIRST_NAME AS EMPLOYEE_FIRST_NAME,
-        e.LAST_NAME AS EMPLOYEE_LAST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_FIRST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_LAST_NAME,
         e.UAN_NUMBER,
-        pd.WORK_DAYS,
-        pd.GROSS_SALARY,
-        /* Wage bases */
-        NVL(pd.PF_WAGE_BASE, 0) AS EPF_WAGES,
-        LEAST(NVL(pd.PF_WAGE_BASE, 0), 15000) AS EPS_WAGES,
-        LEAST(NVL(pd.GROSS_SALARY, 0), 15000) AS EDLI_WAGES,
-        /* Components captured in deductions table */
-        NVL(SUM(CASE WHEN d.DEDUCTION_TYPE = 'PF' THEN d.AMOUNT ELSE 0 END),0) AS PF_EE,
-        /* Employer side tracked in earnings as OTHER with description */
-        NVL(SUM(CASE WHEN pe.DESCRIPTION = 'EPS Employer' THEN pe.AMOUNT ELSE 0 END),0) AS EPS_ER,
-        NVL(SUM(CASE WHEN pe.DESCRIPTION = 'EPF Admin Charges' THEN pe.AMOUNT ELSE 0 END),0) AS EPF_ADMIN,
-        NVL(SUM(CASE WHEN pe.DESCRIPTION = 'EDLI Employer' THEN pe.AMOUNT ELSE 0 END),0) AS EDLI_ER
+        NVL(pd.PAYABLE_DAYS, 0) AS NCP_DAYS,
+        /* Wage bases using new table structure */
+        NVL(pd.TOTAL_EARNING, 0) AS GROSS_WAGES,
+        NVL(pd.FP_BASIC_EARNING, 0) AS EPF_WAGES,
+        LEAST(NVL(pd.FP_BASIC_EARNING, 0), 15000) AS EPS_WAGES,
+        LEAST(NVL(pd.TOTAL_EARNING, 0), 15000) AS EDLI,
+        /* PF Deductions from new table structure */
+        NVL(pd.PF_DEDUCTION, 0) AS EE_SHARE_12,
+        /* Employer contributions calculated as percentages */
+        ROUND(NVL(pd.FP_BASIC_EARNING, 0) * 0.0833, 2) AS EPS_CONTRIBUTION_SHARE_833,
+        ROUND(NVL(pd.FP_BASIC_EARNING, 0) * 0.0367, 2) AS ER_SHARE_367,
+        0 AS REFUND_ADVANCE
       FROM HRMS_PAYROLL_DETAILS pd
       LEFT JOIN HRMS_EMPLOYEES e ON pd.EMPLOYEE_ID = e.EMPLOYEE_ID
-      LEFT JOIN HRMS_PAYROLL_DEDUCTIONS d ON pd.PAYROLL_ID = d.PAYROLL_ID
-      LEFT JOIN HRMS_PAYROLL_EARNINGS pe ON pd.PAYROLL_ID = pe.PAYROLL_ID
       WHERE pd.PERIOD_ID = :periodId
-      GROUP BY e.EMPLOYEE_CODE, e.FIRST_NAME, e.LAST_NAME, e.UAN_NUMBER, pd.WORK_DAYS, pd.GROSS_SALARY, pd.PF_WAGE_BASE
       ORDER BY e.EMPLOYEE_CODE
     `;
     const result = await executeQuery(sql, { periodId });
@@ -2609,20 +2608,18 @@ class Payroll {
         e.EMPLOYEE_CODE,
         e.DEPARTMENT,
         e.DESIGNATION,
-        e.FIRST_NAME AS EMPLOYEE_FIRST_NAME,
-        e.LAST_NAME AS EMPLOYEE_LAST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_FIRST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_LAST_NAME,
         e.ESI_NUMBER,
-        pd.WORK_DAYS,
-        /* ESI base approximated as gross salary for the period when eligible */
-        NVL(pd.ESI_WAGE_BASE, NVL(pd.GROSS_SALARY,0)) AS ESI_WAGES,
-        NVL(SUM(CASE WHEN d.DEDUCTION_TYPE = 'ESI' THEN d.AMOUNT ELSE 0 END),0) AS ESI_EE,
-        NVL(SUM(CASE WHEN pe.DESCRIPTION = 'ESI Employer' THEN pe.AMOUNT ELSE 0 END),0) AS ESI_ER
+        NVL(pd.PAYABLE_DAYS, 0) AS WORK_DAYS,
+        /* ESI base using total salary from new table structure */
+        NVL(pd.TOTAL_SALARY, 0) AS ESI_WAGES,
+        NVL(pd.ESI_DEDUCTION, 0) AS ESI_EE,
+        /* ESI Employer contribution calculated as 3.25% of total salary */
+        ROUND(NVL(pd.TOTAL_SALARY, 0) * 0.0325, 2) AS ESI_ER
       FROM HRMS_PAYROLL_DETAILS pd
       LEFT JOIN HRMS_EMPLOYEES e ON pd.EMPLOYEE_ID = e.EMPLOYEE_ID
-      LEFT JOIN HRMS_PAYROLL_DEDUCTIONS d ON pd.PAYROLL_ID = d.PAYROLL_ID
-      LEFT JOIN HRMS_PAYROLL_EARNINGS pe ON pd.PAYROLL_ID = pe.PAYROLL_ID
       WHERE pd.PERIOD_ID = :periodId
-      GROUP BY e.EMPLOYEE_CODE, e.FIRST_NAME, e.LAST_NAME, e.ESI_NUMBER, pd.WORK_DAYS, pd.GROSS_SALARY, pd.ESI_WAGE_BASE
       ORDER BY e.EMPLOYEE_CODE
     `;
     const result = await executeQuery(sql, { periodId });
@@ -2636,8 +2633,8 @@ class Payroll {
         e.EMPLOYEE_CODE,
         e.DEPARTMENT,
         e.DESIGNATION,
-        e.FIRST_NAME AS EMPLOYEE_FIRST_NAME,
-        e.LAST_NAME AS EMPLOYEE_LAST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_FIRST_NAME,
+        e.LEGAL_NAME AS EMPLOYEE_LAST_NAME,
         e.IFSC_CODE,
         e.ACCOUNT_NUMBER,
         pd.NET_SALARY

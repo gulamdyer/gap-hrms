@@ -171,7 +171,7 @@ class MultiCountryPayrollService {
         totalDeductions,
         totalTaxes: 0, // Will be calculated separately for countries with tax
         workDays: attendance.WORK_DAYS || 30,
-        presentDays: attendance.PRESENT_DAYS || 30,
+        presentDays: attendance.PAYABLE_DAYS || 30,
         absentDays: attendance.ABSENT_DAYS || 0,
         leaveDays: attendance.LEAVE_DAYS || 0,
         overtimeHours,
@@ -352,14 +352,14 @@ class MultiCountryPayrollService {
     const sql = `
       SELECT 
         COUNT(*) as TOTAL_EMPLOYEES,
-        SUM(GROSS_SALARY) as TOTAL_GROSS_SALARY,
+        SUM(TOTAL_SALARY) as TOTAL_GROSS_SALARY,
         SUM(NET_SALARY) as TOTAL_NET_SALARY,
-        SUM(SOCIAL_SECURITY_EMPLOYEE) as TOTAL_EMPLOYEE_DEDUCTIONS,
-        SUM(SOCIAL_SECURITY_EMPLOYER) as TOTAL_EMPLOYER_CONTRIBUTIONS,
-        SUM(GRATUITY_ACCRUAL) as TOTAL_GRATUITY_ACCRUAL,
-        SUM(AIR_TICKET_ACCRUAL) as TOTAL_AIR_TICKET_ACCRUAL,
-        SUM(OVERTIME_AMOUNT) as TOTAL_OVERTIME,
-        AVG(GROSS_SALARY) as AVERAGE_GROSS_SALARY,
+        SUM(ESI_DEDUCTION + PF_DEDUCTION) as TOTAL_EMPLOYEE_DEDUCTIONS,
+        SUM(TOTAL_DEDUCTION) as TOTAL_EMPLOYER_CONTRIBUTIONS,
+        SUM(0) as TOTAL_GRATUITY_ACCRUAL,
+        SUM(0) as TOTAL_AIR_TICKET_ACCRUAL,
+        SUM(OVERTIME_EARNING) as TOTAL_OVERTIME,
+        AVG(TOTAL_SALARY) as AVERAGE_GROSS_SALARY,
         c.CURRENCY_CODE,
         c.CURRENCY_SYMBOL
       FROM HRMS_PAYROLL_DETAILS pd
@@ -511,18 +511,18 @@ class MultiCountryPayrollService {
   static async createPayrollDetail(payrollData, createdBy) {
     const sql = `
       INSERT INTO HRMS_PAYROLL_DETAILS (
-        PERIOD_ID, EMPLOYEE_ID, RUN_ID, BASIC_SALARY, GROSS_SALARY, NET_SALARY,
-        TOTAL_EARNINGS, TOTAL_DEDUCTIONS, TOTAL_TAXES, WORK_DAYS, PRESENT_DAYS,
-        ABSENT_DAYS, LEAVE_DAYS, OVERTIME_HOURS, OVERTIME_AMOUNT, PAYROLL_COUNTRY,
-        SOCIAL_SECURITY_EMPLOYEE, SOCIAL_SECURITY_EMPLOYER, PENSION_EMPLOYEE,
-        PENSION_EMPLOYER, GRATUITY_ACCRUAL, AIR_TICKET_ACCRUAL, OVERTIME_RATE,
+        PERIOD_ID, EMPLOYEE_ID, RUN_ID, BASIC_SALARY, HRA_SALARY, CONVEYANCE_SALARY, 
+        OTHER_SALARY, TOTAL_SALARY, NET_SALARY, TOTAL_EARNING, TOTAL_DEDUCTION, 
+        TAXES_DEDUCTION, WORK_DAYS, PAYABLE_DAYS, ABSENT_DAYS, LEAVE_DAYS, 
+        OVERTIME_HOURS, OVERTIME_EARNING, PAYROLL_COUNTRY, ESI_DEDUCTION, 
+        PF_DEDUCTION, TDS_DEDUCTION, ADVANCE_DEDUCTION, LOAN_DEDUCTION,
         STATUS, CREATED_BY
       ) VALUES (
-        :periodId, :employeeId, :runId, :basicSalary, :grossSalary, :netSalary,
-        :totalEarnings, :totalDeductions, :totalTaxes, :workDays, :presentDays,
-        :absentDays, :leaveDays, :overtimeHours, :overtimeAmount, :payrollCountry,
-        :socialSecurityEmployee, :socialSecurityEmployer, :pensionEmployee,
-        :pensionEmployer, :gratuityAccrual, :airTicketAccrual, :overtimeRate,
+        :periodId, :employeeId, :runId, :basicSalary, :hraSalary, :conveyanceSalary,
+        :otherSalary, :totalSalary, :netSalary, :totalEarning, :totalDeduction,
+        :taxesDeduction, :workDays, :presentDays, :absentDays, :leaveDays,
+        :overtimeHours, :overtimeEarning, :payrollCountry, :esiDeduction,
+        :pfDeduction, :tdsDeduction, :advanceDeduction, :loanDeduction,
         :status, :createdBy
       ) RETURNING PAYROLL_ID INTO :payrollId
     `;
@@ -602,7 +602,7 @@ class MultiCountryPayrollService {
     
     const sql = `
       SELECT 
-        COALESCE(SUM(CASE WHEN STATUS = 'PRESENT' THEN 1 ELSE 0 END), 30) as PRESENT_DAYS,
+        COALESCE(SUM(CASE WHEN STATUS = 'PRESENT' THEN 1 ELSE 0 END), 30) as PAYABLE_DAYS,
         COALESCE(SUM(CASE WHEN STATUS = 'ABSENT' THEN 1 ELSE 0 END), 0) as ABSENT_DAYS,
         COALESCE(SUM(CASE WHEN STATUS = 'LEAVE' THEN 1 ELSE 0 END), 0) as LEAVE_DAYS,
         COALESCE(SUM(NVL(OVERTIME_HOURS, 0)), 0) as OVERTIME_HOURS,
@@ -620,7 +620,7 @@ class MultiCountryPayrollService {
     });
     
     return result.rows?.[0] || {
-      PRESENT_DAYS: 30,
+      PAYABLE_DAYS: 30,
       ABSENT_DAYS: 0,
       LEAVE_DAYS: 0,
       OVERTIME_HOURS: 0,

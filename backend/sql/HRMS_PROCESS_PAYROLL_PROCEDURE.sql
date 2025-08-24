@@ -368,24 +368,26 @@ BEGIN
             -- Insert main payroll record
             INSERT INTO HRMS_PAYROLL_DETAILS (
                 PAYROLL_ID, PERIOD_ID, EMPLOYEE_ID, RUN_ID,
-                BASIC_SALARY, GROSS_SALARY, NET_SALARY,
-                TOTAL_EARNINGS, TOTAL_DEDUCTIONS, TOTAL_TAXES,
-                WORK_DAYS, PRESENT_DAYS, ABSENT_DAYS, LEAVE_DAYS,
-                OVERTIME_HOURS, OVERTIME_AMOUNT,
-                LATE_DAYS, LATE_DEDUCTION,
-                ADVANCE_AMOUNT, LOAN_DEDUCTION, OTHER_DEDUCTIONS,
-                BONUS_AMOUNT, ALLOWANCE_AMOUNT,
-                STATUS, CREATED_BY
+                BASIC_SALARY, HRA_SALARY, CONVEYANCE_SALARY, OTHER_SALARY, TOTAL_SALARY,
+                PAYABLE_DAYS, WORK_DAYS, ABSENT_DAYS, LEAVE_DAYS,
+                BASIC_EARNING, HRA_EARNING, CONVEYANCE_EARNING, OTHER_EARNING,
+                OVERTIME_HOURS, OVERTIME_EARNING, BONUS_EARNING, TOTAL_EARNING,
+                FP_BASIC_EARNING,
+                ESI_DEDUCTION, PF_DEDUCTION, TDS_DEDUCTION, TAXES_DEDUCTION,
+                ADVANCE_DEDUCTION, LOAN_DEDUCTION, 
+                LATE_DAYS, LATE_DEDUCTION, OTHER_DEDUCTION, TOTAL_DEDUCTION,
+                NET_SALARY, STATUS, CREATED_BY
             ) VALUES (
                 v_payroll_id, p_period_id, emp.EMPLOYEE_ID, p_run_id,
-                v_basic_salary, v_gross_salary, v_net_salary,
-                v_total_earnings, v_total_deductions, v_total_taxes,
-                v_working_days, v_present_days, (v_working_days - v_present_days), 0,
-                v_ot_hours, v_ot_amount,
-                CEIL(v_late_minutes / 60), v_late_deduction,
-                v_advance_amount, v_loan_amount, v_other_deductions,
-                v_bonus_amount, (v_hra_amount + v_transport_amount + v_meal_amount + v_other_earnings),
-                'CALCULATED', p_user_id
+                v_basic_salary, v_hra_amount, v_transport_amount, v_other_earnings, v_gross_salary,
+                v_payable_days, v_working_days, (v_working_days - v_payable_days), 0,
+                v_basic_earning, v_hra_earning, v_transport_earning, v_other_actual_earnings,
+                v_ot_hours, v_ot_amount, v_bonus_amount, v_total_earnings,
+                v_basic_earning,
+                v_esi_amount, v_pf_amount, v_tax_amount, v_total_taxes,
+                v_advance_amount, v_loan_amount,
+                CEIL(v_late_minutes / 60), v_late_deduction, v_other_deductions, v_total_deductions,
+                v_net_salary, 'CALCULATED', p_user_id
             );
             
             -- Insert earnings breakdown
